@@ -1,17 +1,20 @@
 import { create } from 'zustand';
 import { SearchParams } from '@/types/ndex';
 
+import { NetworkSummary } from '@/types/ndex';
+
 interface NetworkStore {
   searchParams: SearchParams;
   selectedNetworks: string[];
   selectedNetworkId: string | null;
+  selectedNetwork: NetworkSummary | null;
   viewMode: 'list' | 'grid';
   selectionMode: boolean;
   setSearchParams: (params: Partial<SearchParams>) => void;
   setSelectedNetworks: (networkIds: string[]) => void;
   toggleNetworkSelection: (networkId: string) => void;
   setViewMode: (mode: 'list' | 'grid') => void;
-  setSelectedNetworkId: (networkId: string | null) => void;
+  setSelectedNetwork: (network: NetworkSummary | null) => void;
   setSelectionMode: (enabled: boolean) => void;
 }
 
@@ -24,6 +27,7 @@ export const useNetworkStore = create<NetworkStore>((set) => ({
   selectedNetworks: [],
   viewMode: 'list',
   selectedNetworkId: null,
+  selectedNetwork: null,
   selectionMode: false,
 
   setSearchParams: (params) =>
@@ -48,9 +52,10 @@ export const useNetworkStore = create<NetworkStore>((set) => ({
       viewMode: mode,
     })),
 
-  setSelectedNetworkId: (networkId) =>
+  setSelectedNetwork: (network) =>
     set(() => ({
-      selectedNetworkId: networkId,
+      selectedNetworkId: network?.externalId || null,
+      selectedNetwork: network,
     })),
 
   setSelectionMode: (enabled) =>

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { AppBar, Box, CssBaseline, Toolbar } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import NetworkDetails from './NetworkDetails';
-import { useNetworkSearch } from '@/lib/api';
 import { useNetworkStore } from '@/store';
 import Link from 'next/link';
 import MuiLink from '@mui/material/Link';
@@ -24,14 +23,7 @@ const theme = createTheme({
 });
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const { selectedNetworkId } = useNetworkStore();
-  const { networks = [] } =
-    useNetworkSearch({
-      size: 1000, // Larger size to ensure we have all networks for details
-    }) || {};
-  const selectedNetwork = selectedNetworkId
-    ? networks.find((n) => n.externalId === selectedNetworkId)
-    : undefined;
+  const { selectedNetwork, selectedNetworkId } = useNetworkStore();
   const [isOpen, setIsOpen] = useState(true);
 
   const handlePanelToggle = () => {
@@ -96,7 +88,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {children}
         </Box>
         <NetworkDetails
-          network={selectedNetwork}
+          network={selectedNetwork || undefined}
           open={!!selectedNetworkId && isOpen}
           onClose={handlePanelToggle}
         />

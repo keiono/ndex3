@@ -1,6 +1,7 @@
 "use client";
 
 import { useNetworkStore } from "@/store";
+import { useNetworkSearch } from "@/lib/api";
 import {
   Box,
   InputAdornment,
@@ -9,22 +10,34 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Tooltip,
+  Typography,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import GridViewIcon from "@mui/icons-material/GridView";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import { useCallback, useState } from "react";
-import { useDebounce } from "use-debounce";
-import { useEffect } from "react";
+import { IconButton } from "@mui/material";
 
 export default function SearchToolbar() {
   const { searchParams, setSearchParams, viewMode, setViewMode } = useNetworkStore();
+  const { total } = useNetworkSearch(searchParams);
   const [searchText, setSearchText] = useState(searchParams.searchString || "");
-  const [debouncedSearch] = useDebounce(searchText, 300);
+  const handleSearch = useCallback(() => {
+    setSearchParams({
+      searchString: searchText,
+      start: 0, // Reset to first page on new search
+      size: searchParams.size || 25,
+      permission: searchParams.permission,
+      includeGroups: searchParams.includeGroups,
+      accountName: searchParams.accountName
+    });
+  }, [searchText, searchParams, setSearchParams]);
 
-  useEffect(() => {
-    setSearchParams({ searchString: debouncedSearch, start: 0 });
-  }, [debouncedSearch, setSearchParams]);
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
 
   const handleViewModeChange = useCallback(
     (_: React.MouseEvent<HTMLElement>, newMode: "list" | "grid" | null) => {
@@ -49,10 +62,12 @@ export default function SearchToolbar() {
         borderColor: "divider",
       }}
     >
-      <TextField
-        placeholder="Search networks..."
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <TextField
+          placeholder="Search networks..."
         value={searchText}
         onChange={(e) => setSearchText(e.target.value)}
+        onKeyDown={handleKeyDown}
         sx={{ width: 300 }}
         InputProps={{
           startAdornment: (
@@ -60,8 +75,21 @@ export default function SearchToolbar() {
               <SearchIcon color="action" />
             </InputAdornment>
           ),
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton onClick={handleSearch} aria-label="search">
+                <SearchIcon />
+              </IconButton>
+            </InputAdornment>
+          ),
         }}
       />
+      {total > 0 && (
+        <Typography variant="body2" color="text.secondary" sx={{ minWidth: 80 }}>
+          {total} {total === 1 ? 'hit' : 'hits'}
+        </Typography>
+      )}
+      </Box>
 
       <Box>
         <ToggleButtonGroup

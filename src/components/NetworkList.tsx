@@ -17,11 +17,18 @@ import {
   TableRow,
   Paper,
   Tooltip,
+  Select,
+  MenuItem,
+  Pagination,
+  FormControl,
+  InputLabel,
+  SelectChangeEvent,
 } from '@mui/material';
 import { Grid2 as Grid } from '@mui/material';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
-import { NetworkSummary } from '@/types/ndex';
+import { NetworkSummary, SearchParams } from '@/types/ndex';
 import ClientDate from './ClientDate';
+import { useCallback } from 'react';
 
 function NetworkGridItem({
   network,
@@ -32,7 +39,7 @@ function NetworkGridItem({
   selected: boolean;
   onToggle: () => void;
 }) {
-  const { setSelectedNetworkId, selectionMode, selectedNetworkId } =
+  const { setSelectedNetwork, selectionMode, selectedNetworkId } =
     useNetworkStore();
   const isSelected = selectionMode
     ? selected
@@ -42,7 +49,7 @@ function NetworkGridItem({
     if (selectionMode) {
       onToggle();
     } else {
-      setSelectedNetworkId(network.externalId);
+      setSelectedNetwork(network);
     }
   };
 
@@ -108,13 +115,65 @@ export default function NetworkList() {
     viewMode,
     selectionMode,
     selectedNetworkId,
-    setSelectedNetworkId,
+    setSelectedNetwork,
   } = useNetworkStore();
   const {
     networks = [],
     isLoading,
     error,
+    total = 0,
   } = useNetworkSearch(searchParams) || {};
+
+  // Pagination handling
+  const updateSearchParams = useCallback((updates: Partial<SearchParams>) => {
+    // Create a new object with all current params and add updates
+    const newParams: SearchParams = {
+      ...searchParams,  // Keep all existing params
+      ...updates,       // Apply updates
+      // Ensure searchString is preserved
+      searchString: searchParams.searchString || ''
+    };
+    useNetworkStore.getState().setSearchParams(newParams);
+  }, [searchParams]);
+
+  const handlePageChange = useCallback((_: React.ChangeEvent<unknown>, page: number) => {
+    const newStart = (page - 1) * (searchParams.size || 25);
+    updateSearchParams({ start: newStart });
+  }, [searchParams.size, updateSearchParams]);
+
+  const handlePageSizeChange = useCallback((event: SelectChangeEvent<number>) => {
+    const newSize = Number(event.target.value);
+    updateSearchParams({ size: newSize, start: 0 });
+  }, [updateSearchParams]);
+
+  const currentPage = Math.floor((searchParams.start || 0) / (searchParams.size || 25)) + 1;
+  const totalPages = Math.ceil(total / (searchParams.size || 25));
+
+  const PaginationControls = () => (
+    <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <FormControl variant="outlined" size="small">
+        <InputLabel>Page Size</InputLabel>
+        <Select
+          value={searchParams.size || 25}
+          onChange={handlePageSizeChange}
+          label="Page Size"
+          sx={{ minWidth: 120 }}
+        >
+          <MenuItem value={25}>25</MenuItem>
+          <MenuItem value={50}>50</MenuItem>
+          <MenuItem value={100}>100</MenuItem>
+        </Select>
+      </FormControl>
+      <Pagination 
+        count={totalPages}
+        page={currentPage}
+        onChange={handlePageChange}
+        color="primary"
+        showFirstButton 
+        showLastButton
+      />
+    </Box>
+  );
 
   // Show loading state
   if (isLoading) {
@@ -143,92 +202,98 @@ export default function NetworkList() {
 
   if (viewMode === 'grid') {
     return (
-      <Grid container spacing={2}>
-        {networks.map((network) => (
-          <Grid key={network.externalId} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-            <NetworkGridItem
-              network={network}
-              selected={selectedNetworks.includes(network.externalId)}
-              onToggle={() => toggleNetworkSelection(network.externalId)}
-            />
-          </Grid>
-        ))}
-      </Grid>
+      <>
+        <Grid container spacing={2}>
+          {networks.map((network) => (
+            <Grid key={network.externalId} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+              <NetworkGridItem
+                network={network}
+                selected={selectedNetworks.includes(network.externalId)}
+                onToggle={() => toggleNetworkSelection(network.externalId)}
+              />
+            </Grid>
+          ))}
+        </Grid>
+        <PaginationControls />
+      </>
     );
   }
 
-  // Render Table view with additional columns.
+  // Render Table view with additional columns
   return (
-    <TableContainer component={Paper}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Name</TableCell>
-            <TableCell>Description</TableCell>
-            <TableCell>Nodes</TableCell>
-            <TableCell>Edges</TableCell>
-            <TableCell>Owner</TableCell>
-            <TableCell>Visibility</TableCell>
-            <TableCell>Last Modified</TableCell>
-            <TableCell>Creation Time</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {networks.map((network) => (
-            <TableRow
-              key={network.externalId}
-              hover
-              selected={
-                !selectionMode && selectedNetworkId === network.externalId
-              }
-              onClick={() => {
-                if (selectionMode) {
-                  toggleNetworkSelection(network.externalId);
-                } else {
-                  setSelectedNetworkId(network.externalId);
-                }
-              }}
-              sx={{ cursor: 'pointer' }}
-            >
-              <TableCell>
-                <MuiLink
-                  component="a"
-                  href={`https://www.ndexbio.org/viewer/networks/${network.externalId}`}
-                  underline="hover"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    window.open(
-                      `https://www.ndexbio.org/viewer/networks/${network.externalId}`,
-                      'ndexViewer',
-                    );
-                  }}
-                >
-                  {network.name}
-                </MuiLink>
-              </TableCell>
-              <TableCell>
-                <Tooltip title={network.description} arrow placement="top">
-                  <span>
-                    {network.description && network.description.length > 200
-                      ? `${network.description.substring(0, 200)}…`
-                      : network.description || 'No description'}
-                  </span>
-                </Tooltip>
-              </TableCell>
-              <TableCell>{network.nodeCount}</TableCell>
-              <TableCell>{network.edgeCount}</TableCell>
-              <TableCell>{network.owner}</TableCell>
-              <TableCell>{network.visibility}</TableCell>
-              <TableCell>
-                <ClientDate date={network.modificationTime} />
-              </TableCell>
-              <TableCell>
-                <ClientDate date={network.creationTime} />
-              </TableCell>
+    <>
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Name</TableCell>
+              <TableCell>Description</TableCell>
+              <TableCell>Nodes</TableCell>
+              <TableCell>Edges</TableCell>
+              <TableCell>Owner</TableCell>
+              <TableCell>Visibility</TableCell>
+              <TableCell>Last Modified</TableCell>
+              <TableCell>Creation Time</TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          </TableHead>
+          <TableBody>
+            {networks.map((network) => (
+              <TableRow
+                key={network.externalId}
+                hover
+                selected={
+                  !selectionMode && selectedNetworkId === network.externalId
+                }
+                onClick={() => {
+                  if (selectionMode) {
+                    toggleNetworkSelection(network.externalId);
+                  } else {
+                    setSelectedNetwork(network);
+                  }
+                }}
+                sx={{ cursor: 'pointer' }}
+              >
+                <TableCell>
+                  <MuiLink
+                    component="a"
+                    href={`https://www.ndexbio.org/viewer/networks/${network.externalId}`}
+                    underline="hover"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.open(
+                        `https://www.ndexbio.org/viewer/networks/${network.externalId}`,
+                        'ndexViewer',
+                      );
+                    }}
+                  >
+                    {network.name}
+                  </MuiLink>
+                </TableCell>
+                <TableCell>
+                  <Tooltip title={network.description} arrow placement="top">
+                    <span>
+                      {network.description && network.description.length > 200
+                        ? `${network.description.substring(0, 200)}…`
+                        : network.description || 'No description'}
+                    </span>
+                  </Tooltip>
+                </TableCell>
+                <TableCell>{network.nodeCount}</TableCell>
+                <TableCell>{network.edgeCount}</TableCell>
+                <TableCell>{network.owner}</TableCell>
+                <TableCell>{network.visibility}</TableCell>
+                <TableCell>
+                  <ClientDate date={network.modificationTime} />
+                </TableCell>
+                <TableCell>
+                  <ClientDate date={network.creationTime} />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <PaginationControls />
+    </>
   );
 }
