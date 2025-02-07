@@ -1,4 +1,4 @@
-import { NetworkSummary } from "@/types/ndex";
+import { NetworkSummary } from '@/types/ndex';
 import {
   Box,
   Drawer,
@@ -8,13 +8,13 @@ import {
   ListItem,
   ListItemText,
   Divider,
-} from "@mui/material";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ClientDate from "./ClientDate";
-import DOMPurify from "dompurify";
+} from '@mui/material';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ClientDate from './ClientDate';
+import DOMPurify from 'dompurify';
 
-const DRAWER_WIDTH = 400;
+const DRAWER_WIDTH = 500;
 
 interface NetworkDetailsProps {
   network?: NetworkSummary;
@@ -22,17 +22,21 @@ interface NetworkDetailsProps {
   onClose: () => void;
 }
 
-export default function NetworkDetails({ network, open, onClose }: NetworkDetailsProps) {
+export default function NetworkDetails({
+  network,
+  open,
+  onClose,
+}: NetworkDetailsProps) {
   return (
     <>
       <Drawer
         sx={{
           width: DRAWER_WIDTH,
           flexShrink: 0,
-          "& .MuiDrawer-paper": {
+          '& .MuiDrawer-paper': {
             width: DRAWER_WIDTH,
-            boxSizing: "border-box",
-            overflowX: "visible", // Allow content to overflow for the toggle button
+            boxSizing: 'border-box',
+            overflowX: 'visible', // Allow content to overflow for the toggle button
           },
         }}
         variant="persistent"
@@ -41,7 +45,7 @@ export default function NetworkDetails({ network, open, onClose }: NetworkDetail
       >
         {network && (
           <>
-            <Box sx={{ p: 2, display: "flex", alignItems: "center" }}>
+            <Box sx={{ p: 2, display: 'flex', alignItems: 'center' }}>
               <Typography variant="h6">Network Details</Typography>
             </Box>
             <Divider />
@@ -49,39 +53,34 @@ export default function NetworkDetails({ network, open, onClose }: NetworkDetail
               <Typography variant="h6" noWrap gutterBottom>
                 {network.name}
               </Typography>
-              <Typography 
-                variant="body2" 
-                color="text.secondary" 
-                paragraph
+              <Typography
+                variant="body2"
+                color="text.secondary"
                 component="div"
                 dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(network.description || "No description")
+                  __html: DOMPurify.sanitize(
+                    network.description || 'No description',
+                  ),
                 }}
               />
               <List dense>
                 <ListItem>
-                  <ListItemText
-                    primary="Owner"
-                    secondary={network.owner}
-                  />
+                  <ListItemText primary="Owner" secondary={network.owner} />
                 </ListItem>
                 <ListItem>
                   <ListItemText
                     primary="Created"
-                    secondary={<ClientDate date={network.created} />}
+                    secondary={<ClientDate date={network.creationTime} />}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemText
                     primary="Modified"
-                    secondary={<ClientDate date={network.modified} />}
+                    secondary={<ClientDate date={network.modificationTime} />}
                   />
                 </ListItem>
                 <ListItem>
-                  <ListItemText
-                    primary="Version"
-                    secondary={network.version}
-                  />
+                  <ListItemText primary="Version" secondary={network.version} />
                 </ListItem>
                 <ListItem>
                   <ListItemText
@@ -96,10 +95,7 @@ export default function NetworkDetails({ network, open, onClose }: NetworkDetail
                   />
                 </ListItem>
                 <ListItem>
-                  <ListItemText
-                    primary="UUID"
-                    secondary={network.externalId}
-                  />
+                  <ListItemText primary="UUID" secondary={network.externalId} />
                 </ListItem>
               </List>
               {network.properties.length > 0 && (
@@ -125,7 +121,7 @@ export default function NetworkDetails({ network, open, onClose }: NetworkDetail
       </Drawer>
       {network && (
         <>
-          <IconButton 
+          <IconButton
             onClick={onClose}
             sx={{
               position: 'fixed',
@@ -139,8 +135,8 @@ export default function NetworkDetails({ network, open, onClose }: NetworkDetail
               '&:hover': {
                 backgroundColor: 'action.hover',
               },
-              zIndex: theme => theme.zIndex.drawer + 2,
-              transition: theme => theme.transitions.create(['right']),
+              zIndex: (theme) => theme.zIndex.drawer + 2,
+              transition: (theme) => theme.transitions.create(['right']),
             }}
           >
             {open ? <ChevronRightIcon /> : <ChevronLeftIcon />}

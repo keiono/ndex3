@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { SWRConfig } from "swr";
 
 export const metadata: Metadata = {
-  title: "NDEx Network Browser",
-  description: "Browse and search NDEx networks with a Google Drive-like interface",
+  title: "NDEx v3",
+  description: "Next generation NDEx web client",
 };
 
 const swrConfig = {

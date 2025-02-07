@@ -1,17 +1,22 @@
-"use client";
+'use client';
 
-import Layout from "@/components/Layout";
-import NetworkList from "@/components/NetworkList";
-import SearchToolbar from "@/components/SearchToolbar";
-import { Box } from "@mui/material";
+import { Box, Typography, Link as MuiLink } from '@mui/material';
+import Link from 'next/link';
 
-export default function HomePage() {
+export default function TopPage() {
   return (
-    <Layout>
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        <SearchToolbar />
-        <NetworkList />
-      </Box>
-    </Layout>
+    <Box sx={{ p: 4 }} suppressHydrationWarning>
+      <Typography variant="h2" gutterBottom>
+        Welcome to NDEx v3
+      </Typography>
+      <Typography sx={{ mb: 2 }}>
+        (Add links to other pages here)
+      </Typography>
+      <Link href="/networks" passHref>
+        <MuiLink variant="body1" component="span">
+          Networks
+        </MuiLink>
+      </Link>
+    </Box>
   );
 }

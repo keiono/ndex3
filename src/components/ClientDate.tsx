@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { format } from "date-fns";
+import React, { useEffect, useState } from 'react';
+import { format } from 'date-fns';
 
 type ClientDateProps = {
-  date: string | Date;
+  date: number | Date;
 };
 
 export default function ClientDate({ date }: ClientDateProps) {
@@ -15,18 +15,21 @@ export default function ClientDate({ date }: ClientDateProps) {
   }, []);
 
   if (!mounted) {
-    // Using suppressHydrationWarning ensures no mismatch warnings.
     return <span suppressHydrationWarning>Loading...</span>;
   }
 
-  const parsedDate = new Date(date);
+  let parsedDate = new Date(date);
+  if (isNaN(parsedDate.getTime())) {
+    // If the date appears to be a Unix timestamp in seconds, convert it to milliseconds.
+    const timestamp = Number(date);
+    if (!isNaN(timestamp)) {
+      parsedDate = new Date(timestamp * 1000);
+    }
+  }
+
   if (isNaN(parsedDate.getTime())) {
     return <span suppressHydrationWarning>Invalid date</span>;
   }
 
-  return (
-    <span suppressHydrationWarning>
-      {format(parsedDate, "PPP")}
-    </span>
-  );
+  return <span suppressHydrationWarning>{format(parsedDate, 'PPP')}</span>;
 }

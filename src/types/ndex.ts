@@ -8,8 +8,8 @@ export interface NetworkSummary {
   name: string;
   description: string;
   version: string;
-  created: string;
-  modified: string;
+  creationTime: number;
+  modificationTime: number;
   externalId: string;
   owner: string;
   properties: Array<{
