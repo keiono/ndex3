@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AppBar, Box, CssBaseline, Toolbar, Typography } from '@mui/material';
+import { AppBar, Box, CssBaseline, Toolbar } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import NetworkDetails from './NetworkDetails';
 import { useNetworkSearch } from '@/lib/api';
