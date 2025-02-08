@@ -1,7 +1,8 @@
 "use client";
 
-import { useNetworkStore } from "@/store";
-import { useNetworkSearch } from "@/lib/api";
+import { useNetworkStore, useUserStore } from "@/store";
+import { useNetworkSearch, useUserSearch } from "@/lib/api";
+import { usePathname } from "next/navigation";
 import {
   Box,
   InputAdornment,
@@ -19,12 +20,24 @@ import { useCallback, useState } from "react";
 import { IconButton } from "@mui/material";
 
 export default function SearchToolbar() {
-  const { searchParams, setSearchParams, viewMode, setViewMode } = useNetworkStore();
-  const { total } = useNetworkSearch(searchParams);
+  const pathname = usePathname();
+  const isUserSearch = pathname === "/users";
+  
+  const networkStore = useNetworkStore();
+  const userStore = useUserStore();
+  
+  const { searchParams, setSearchParams, viewMode, setViewMode } = isUserSearch 
+    ? { ...userStore, viewMode: "list" as const, setViewMode: () => {} }
+    : networkStore;
+    
+  // Call hooks unconditionally
+  const userSearchResult = useUserSearch(searchParams);
+  const networkSearchResult = useNetworkSearch(searchParams);
+  const total = isUserSearch ? userSearchResult.total : networkSearchResult.total;
   const [searchText, setSearchText] = useState(searchParams.searchString || "");
   const handleSearch = useCallback(() => {
     setSearchParams({
-      searchString: searchText,
+      searchString: isUserSearch && !searchText.trim() ? '*' : searchText,
       start: 0, // Reset to first page on new search
       size: searchParams.size || 25,
       permission: searchParams.permission,
@@ -64,7 +77,7 @@ export default function SearchToolbar() {
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <TextField
-          placeholder="Search networks..."
+          placeholder={`Search ${isUserSearch ? "users" : "networks"}...`}
         value={searchText}
         onChange={(e) => setSearchText(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -91,8 +104,9 @@ export default function SearchToolbar() {
       )}
       </Box>
 
-      <Box>
-        <ToggleButtonGroup
+      {!isUserSearch && (
+        <Box>
+          <ToggleButtonGroup
           value={viewMode}
           exclusive
           onChange={handleViewModeChange}
@@ -109,8 +123,9 @@ export default function SearchToolbar() {
               <GridViewIcon />
             </Tooltip>
           </ToggleButton>
-        </ToggleButtonGroup>
-      </Box>
+          </ToggleButtonGroup>
+        </Box>
+      )}
     </Paper>
   );
 }

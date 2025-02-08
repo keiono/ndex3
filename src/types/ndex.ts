@@ -34,3 +34,22 @@ export interface SearchParams {
   permission?: string;
   includeGroups?: boolean;
 }
+
+export interface User {
+  properties: Record<string, unknown>;
+  isIndividual: boolean;
+  userName: string;
+  isVerified: boolean;
+  firstName: string;
+  lastName: string;
+  creationTime: number;
+  isDeleted: boolean;
+  externalId: string;
+  modificationTime: number;
+}
+
+export interface UserSearchResult {
+  numFound: number;
+  start: number;
+  resultList: User[];
+}

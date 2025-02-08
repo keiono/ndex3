@@ -9,14 +9,18 @@ export default function TopPage() {
       <Typography variant="h2" gutterBottom>
         Welcome to NDEx v3
       </Typography>
-      <Typography sx={{ mb: 2 }}>
-        (Add links to other pages here)
-      </Typography>
-      <Link href="/networks" passHref>
-        <MuiLink variant="body1" component="span">
-          Networks
-        </MuiLink>
-      </Link>
+      <Box sx={{ display: 'flex', gap: 3, mb: 2 }}>
+        <Link href="/networks" passHref>
+          <MuiLink variant="body1" component="span">
+            Networks
+          </MuiLink>
+        </Link>
+        <Link href="/users" passHref>
+          <MuiLink variant="body1" component="span">
+            Users
+          </MuiLink>
+        </Link>
+      </Box>
     </Box>
   );
 }

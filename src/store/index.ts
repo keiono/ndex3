@@ -1,7 +1,31 @@
 import { create } from 'zustand';
-import { SearchParams } from '@/types/ndex';
+import { SearchParams, NetworkSummary, User } from '@/types/ndex';
 
-import { NetworkSummary } from '@/types/ndex';
+interface UserStore {
+  searchParams: SearchParams;
+  selectedUser: User | null;
+  setSearchParams: (params: Partial<SearchParams>) => void;
+  setSelectedUser: (user: User | null) => void;
+}
+
+export const useUserStore = create<UserStore>((set) => ({
+  searchParams: {
+    start: 0,
+    size: 25,
+    searchString: '*',  // Use wildcard to get all users by default
+  },
+  selectedUser: null,
+
+  setSearchParams: (params) =>
+    set((state) => ({
+      searchParams: { ...state.searchParams, ...params },
+    })),
+
+  setSelectedUser: (user) =>
+    set(() => ({
+      selectedUser: user,
+    })),
+}));
 
 interface NetworkStore {
   searchParams: SearchParams;

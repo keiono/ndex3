@@ -1,5 +1,9 @@
 import useSWR from 'swr';
-import { NetworkSearchResult, SearchParams } from '@/types/ndex';
+import {
+  NetworkSearchResult,
+  SearchParams,
+  UserSearchResult,
+} from '@/types/ndex';
 
 const BASE_URL = 'https://www.ndexbio.org/v2';
 
@@ -20,42 +24,80 @@ const buildUrl = (baseUrl: string, params: SearchParams) => {
   if (params.accountName) {
     queryParams.set('accountName', params.accountName);
   }
-  
+
   return `${baseUrl}?${queryParams.toString()}`;
 };
 
 const fetcher = async (url: string, params: SearchParams) => {
   const fullUrl = buildUrl(url, params);
-  
+
   // Ensure the POST body matches exactly what the API expects
   const body: SearchParams = {
     searchString: params.searchString || '',
     start: params.start || 0,
     size: params.size || 25,
     ...(params.permission && { permission: params.permission }),
-    ...(typeof params.includeGroups === 'boolean' && { includeGroups: params.includeGroups }),
-    ...(params.accountName && { accountName: params.accountName })
+    ...(typeof params.includeGroups === 'boolean' && {
+      includeGroups: params.includeGroups,
+    }),
+    ...(params.accountName && { accountName: params.accountName }),
   };
 
   const response = await fetch(fullUrl, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
   });
-  
+
   if (!response.ok) {
     throw new Error('Network response was not ok');
   }
-  
+
   return response.json();
 };
 
 const EMPTY_RESULT: NetworkSearchResult = {
   networks: [],
   numFound: 0,
-  start: 0
+  start: 0,
+};
+
+const EMPTY_USER_RESULT: UserSearchResult = {
+  resultList: [],
+  numFound: 0,
+  start: 0,
+};
+
+export const useUserSearch = (params: SearchParams) => {
+  // Create a cache key that changes when any relevant param changes
+  const cacheKey = JSON.stringify({
+    url: `${BASE_URL}/search/user`,
+    searchString: params.searchString || '',
+    start: params.start || 0,
+    size: params.size || 25,
+  });
+
+  const { data, error, isLoading } = useSWR<UserSearchResult, Error>(
+    cacheKey,
+    () => fetcher(`${BASE_URL}/search/user`, params),
+    {
+      revalidateOnFocus: false,
+      refreshInterval: 0,
+      fallbackData: EMPTY_USER_RESULT,
+      keepPreviousData: false,
+      suspense: false,
+      revalidateOnMount: true,
+    },
+  );
+
+  return {
+    users: data?.resultList || [],
+    error,
+    isLoading,
+    total: data?.numFound || 0,
+  };
 };
 
 export const useNetworkSearch = (params: SearchParams) => {
@@ -67,7 +109,7 @@ export const useNetworkSearch = (params: SearchParams) => {
     size: params.size || 25,
     permission: params.permission,
     includeGroups: params.includeGroups,
-    accountName: params.accountName
+    accountName: params.accountName,
   });
 
   const { data, error, isLoading } = useSWR<NetworkSearchResult, Error>(
@@ -80,13 +122,13 @@ export const useNetworkSearch = (params: SearchParams) => {
       keepPreviousData: false, // Don't keep previous data to ensure fresh results
       suspense: false,
       revalidateOnMount: true, // Always fetch on mount
-    }
+    },
   );
 
   return {
     networks: data?.networks || [],
     error,
     isLoading,
-    total: data?.numFound || 0
+    total: data?.numFound || 0,
   };
 };
